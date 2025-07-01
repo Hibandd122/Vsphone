@@ -3,6 +3,7 @@ from flask_cors import CORS
 import requests, time, json, random, string
 
 app = Flask(__name__)
+# Updated CORS to allow requests from https://cloud.vsphone.com
 CORS(app, origins=["https://cloud.vsphone.com"], supports_credentials=True)
 
 PASSWORD = "quynhduy23"
