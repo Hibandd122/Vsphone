@@ -1,10 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests, time, json, random, string
 
 app = Flask(__name__)
-# Updated CORS to allow requests from https://cloud.vsphone.com
-CORS(app, origins=["https://cloud.vsphone.com"], supports_credentials=True)
+# Allow all origins, no credentials support
+CORS(app)
 
 PASSWORD = "quynhduy23"
 EMAIL_USERNAME = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
@@ -120,4 +120,8 @@ def create_account():
             "token": user_token
         })
     except Exception as e:
+        app.logger.error(f"Error in create_account: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    app.run(debug=True)
