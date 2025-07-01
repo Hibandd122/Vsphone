@@ -3,7 +3,7 @@ from flask_cors import CORS
 import requests, time, json, random, string
 
 app = Flask(__name__)
-CORS(app)  # Mở CORS cho tất cả domain
+CORS(app, resources={r"/*": {"origins": "*"}})  # Fix CORS hoàn toàn
 
 PASSWORD = "quynhduy23"
 EMAIL_USERNAME = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
@@ -96,9 +96,22 @@ def login(email_alias, code):
 
 @app.route("/create", methods=["GET"])
 def create_account():
+    global MAIL_TOKEN, EMAIL_DOMAIN, EMAIL_BASE
+
     try:
+        # Nếu mail gốc chưa được tạo → tạo tại đây
         if MAIL_TOKEN is None:
-            return jsonify({"error": "Mail chưa khởi tạo"}), 500
+            EMAIL_DOMAIN = get_mail_domain()
+            EMAIL_BASE = f"{EMAIL_USERNAME}@{EMAIL_DOMAIN}"
+            payload = {"address": EMAIL_BASE, "password": PASSWORD}
+            r = requests.post("https://api.mail.tm/accounts", json=payload)
+            if r.status_code == 201:
+                while True:
+                    t = requests.post("https://api.mail.tm/token", json=payload).json()
+                    if "token" in t:
+                        MAIL_TOKEN = t["token"]
+                        break
+                    delay()
 
         alias = gen_email_alias()
         send_sms(alias)
@@ -111,6 +124,3 @@ def create_account():
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    create_main_mail()  # tạo mail gốc lúc khởi động
