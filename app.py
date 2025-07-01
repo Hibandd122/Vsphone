@@ -103,7 +103,7 @@ def login(email_alias, code):
         except:
             delay()
 
-@app.route("/create", methods=["GET"])
+@app.route("", methods=["GET"])
 def create_account():
     global MAIL_TOKEN, EMAIL_DOMAIN, EMAIL_BASE
     try:
