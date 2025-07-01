@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, make_response
+from flask import Flask, jsonify, make_response, request
 import requests, time, json, random, string
 
 app = Flask(__name__)
@@ -100,6 +100,18 @@ def login(email_alias, code):
         except:
             delay()
 
+def cors_response(resp):
+    origin = request.headers.get("Origin", "*")
+    resp.headers["Access-Control-Allow-Origin"] = origin
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    resp.headers["Access-Control-Allow-Credentials"] = "true"
+    return resp
+
+@app.route("/create", methods=["OPTIONS"])
+def handle_options():
+    return cors_response(make_response())
+
 @app.route("/create", methods=["GET"])
 def create_account():
     global MAIL_TOKEN, EMAIL_DOMAIN, EMAIL_BASE
@@ -113,17 +125,12 @@ def create_account():
         code = wait_for_code(alias)
         uid, user_token = login(alias, code)
 
-        # 💡 Fix CORS bằng make_response
         res = make_response(jsonify({
             "userId": uid,
             "token": user_token
         }))
-        res.headers["Access-Control-Allow-Origin"] = "*"
-        res.headers["Access-Control-Allow-Headers"] = "*"
-        return res
+        return cors_response(res)
 
     except Exception as e:
         res = make_response(jsonify({"error": str(e)}), 500)
-        res.headers["Access-Control-Allow-Origin"] = "*"
-        res.headers["Access-Control-Allow-Headers"] = "*"
-        return res
+        return cors_response(res)
