@@ -1,7 +1,9 @@
-from flask import Flask, jsonify, make_response, request
+from flask import Flask, jsonify
+from flask_cors import CORS
 import requests, time, json, random, string
 
 app = Flask(__name__)
+CORS(app, origins=["https://cloud.vsphone.com"], supports_credentials=True)
 
 PASSWORD = "quynhduy23"
 EMAIL_USERNAME = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
@@ -100,22 +102,9 @@ def login(email_alias, code):
         except:
             delay()
 
-def cors_response(resp):
-    origin = request.headers.get("Origin", "*")
-    resp.headers["Access-Control-Allow-Origin"] = origin
-    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    resp.headers["Access-Control-Allow-Credentials"] = "true"
-    return resp
-
-@app.route("/create", methods=["OPTIONS"])
-def handle_options():
-    return cors_response(make_response())
-
 @app.route("/create", methods=["GET"])
 def create_account():
     global MAIL_TOKEN, EMAIL_DOMAIN, EMAIL_BASE
-
     try:
         if MAIL_TOKEN is None:
             create_mail_account()
@@ -125,12 +114,9 @@ def create_account():
         code = wait_for_code(alias)
         uid, user_token = login(alias, code)
 
-        res = make_response(jsonify({
+        return jsonify({
             "userId": uid,
             "token": user_token
-        }))
-        return cors_response(res)
-
+        })
     except Exception as e:
-        res = make_response(jsonify({"error": str(e)}), 500)
-        return cors_response(res)
+        return jsonify({"error": str(e)}), 500
